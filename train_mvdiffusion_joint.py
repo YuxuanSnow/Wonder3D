@@ -149,6 +149,7 @@ def log_validation(dataloader, vae, feature_extractor, image_encoder, unet, cfg:
         # (2B, Nv, Nce)
         camera_embeddings = torch.cat([batch['camera_embeddings']]*2, dim=0)
 
+        # indicate the color task or nomral task
         task_embeddings = torch.cat([batch['normal_task_embeddings'], batch['color_task_embeddings']], dim=0)
 
         camera_task_embeddings = torch.cat([camera_embeddings, task_embeddings], dim=-1)

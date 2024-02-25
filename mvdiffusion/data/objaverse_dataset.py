@@ -284,7 +284,7 @@ class ObjaverseDataset(Dataset):
             set_idx = 0
 
         if self.augment_data:
-            cond_view = random.sample(self.view_types, k=1)[0]
+            cond_view = random.sample(self.view_types, k=1)[0] # randomly sample the frontal view
         else:
             cond_view = 'front'
 
@@ -321,7 +321,7 @@ class ObjaverseDataset(Dataset):
         ] * self.num_views
         img_tensors_out = []
 
-        for view, tgt_w2c in zip(view_types, tgt_w2cs):
+        for view, tgt_w2c in zip(view_types, tgt_w2cs): # for each view
             img_path = os.path.join(self.root_dir,  object_name[:self.subscene_tag], object_name, "rgb_%03d_%s.%s" % (set_idx, view, self.suffix))
             mask_path = os.path.join(self.root_dir,  object_name[:self.subscene_tag], object_name, "mask_%03d_%s.%s" % (set_idx, view, self.suffix))
             normal_path = os.path.join(self.root_dir,  object_name[:self.subscene_tag], object_name, "normals_%03d_%s.%s" % (set_idx, view, self.suffix))
@@ -344,7 +344,7 @@ class ObjaverseDataset(Dataset):
                 img_tensors_out.append(depth_tensor)
 
             # evelations, azimuths
-            elevation, azimuth = self.get_T(tgt_w2c, cond_w2c)
+            elevation, azimuth = self.get_T(tgt_w2c, cond_w2c) # get relative
             elevations.append(elevation)
             azimuths.append(azimuth)
 
@@ -362,9 +362,9 @@ class ObjaverseDataset(Dataset):
         color_class = torch.tensor([0, 1]).float()
         color_task_embeddings = torch.stack([color_class]*self.num_views, dim=0)  # (Nv, 2)
         if read_normal or read_depth:
-            task_embeddings = normal_task_embeddings
+            task_embeddings = normal_task_embeddings # only normal
         if read_color:
-            task_embeddings = color_task_embeddings
+            task_embeddings = color_task_embeddings # only color
         # print(elevations)
         # print(azimuths)
         return {
@@ -450,9 +450,9 @@ class ObjaverseDataset(Dataset):
 
         camera_embeddings = torch.stack([elevations_cond, elevations, azimuths], dim=-1) # (Nv, 3)
 
-        normal_class = torch.tensor([1, 0]).float()
+        normal_class = torch.tensor([1, 0]).float() 
         normal_task_embeddings = torch.stack([normal_class]*self.num_views, dim=0)  # (Nv, 2)
-        color_class = torch.tensor([0, 1]).float()
+        color_class = torch.tensor([0, 1]).float() 
         color_task_embeddings = torch.stack([color_class]*self.num_views, dim=0)  # (Nv, 2)
 
         return {
@@ -466,7 +466,7 @@ class ObjaverseDataset(Dataset):
             'imgs_out': img_tensors_out,
             'normals_out': normal_tensors_out,
             'camera_embeddings': camera_embeddings,
-            'normal_task_embeddings': normal_task_embeddings,
+            'normal_task_embeddings': normal_task_embeddings, # both use color and normal task here; will be concatenated later.
             'color_task_embeddings': color_task_embeddings
         }
 

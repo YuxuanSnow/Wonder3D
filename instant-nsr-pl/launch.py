@@ -55,6 +55,7 @@ def main():
     config.code_dir = config.get('code_dir') or os.path.join(config.exp_dir, config.trial_name, 'code')
     config.config_dir = config.get('config_dir') or os.path.join(config.exp_dir, config.trial_name, 'config')
 
+    
     logger = logging.getLogger('pytorch_lightning')
     if args.verbose:
         logger.setLevel(logging.DEBUG)

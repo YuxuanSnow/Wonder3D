@@ -17,7 +17,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         self.config = config
         self.rank = get_rank()
         self.prepare()
-        self.model = models.make(self.config.model.name, self.config.model)
+        self.model = models.make(self.config.model.name, self.config.model) # get the network
     
     def prepare(self):
         pass

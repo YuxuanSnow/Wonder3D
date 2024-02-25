@@ -243,14 +243,14 @@ class SingleImageDataset(Dataset):
 
     def __getitem__(self, index):
 
-        image = self.all_images[index%len(self.all_images)]
-        alpha = self.all_alphas[index%len(self.all_images)]
+        image = self.all_images[index%len(self.all_images)] # images
+        alpha = self.all_alphas[index%len(self.all_images)] # masks
         if self.file_list is not None:
             filename = self.file_list[index%len(self.all_images)].replace(".png", "")
         else:
             filename = 'null'
 
-        cond_w2c = self.fix_cam_poses['front']
+        cond_w2c = self.fix_cam_poses['front'] # camera poses front view (first view)
 
         tgt_w2cs = [self.fix_cam_poses[view] for view in self.view_types]
 
@@ -265,9 +265,9 @@ class SingleImageDataset(Dataset):
             alpha.permute(2, 0, 1)
         ] * self.num_views
 
-        for view, tgt_w2c in zip(self.view_types, tgt_w2cs):
+        for view, tgt_w2c in zip(self.view_types, tgt_w2cs): # intotal 6 views
             # evelations, azimuths
-            elevation, azimuth = self.get_T(tgt_w2c, cond_w2c)
+            elevation, azimuth = self.get_T(tgt_w2c, cond_w2c) # get relative eveleation and azimuth w.r.t. front view which is not identity matrix
             elevations.append(elevation)
             azimuths.append(azimuth)
 
@@ -276,7 +276,7 @@ class SingleImageDataset(Dataset):
 
         elevations = torch.as_tensor(elevations).float().squeeze(1)
         azimuths = torch.as_tensor(azimuths).float().squeeze(1)
-        elevations_cond = torch.as_tensor([0] * self.num_views).float()
+        elevations_cond = torch.as_tensor([0] * self.num_views).float() # elecetion condition is zero? Not important: https://github.com/xxlong0/Wonder3D/issues/123
 
         normal_class = torch.tensor([1, 0]).float()
         normal_task_embeddings = torch.stack([normal_class]*self.num_views, dim=0)  # (Nv, 2)

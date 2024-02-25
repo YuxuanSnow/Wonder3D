@@ -101,11 +101,12 @@ def load_a_prediction(root_dir, test_object, imSize, view_types, load_color=Fals
     RT_front = np.loadtxt(glob(os.path.join(cam_pose_dir, '*_%s_RT.txt'%( 'front')))[0])   # world2cam matrix
     RT_front_cv = RT_opengl2opencv(RT_front)   # convert normal from opengl to opencv
     for idx, view in enumerate(view_types):
-        print(os.path.join(root_dir,test_object))
         normal_filepath = os.path.join(root_dir, test_object, 'normals_000_%s.png'%( view))
+
         # Load key frame
         if load_color:  # use bgr
             image =np.array(PIL.Image.open(normal_filepath.replace("normals", "rgb")).resize(imSize))[:, :, :3]
+
 
         normal = np.array(PIL.Image.open(normal_filepath).resize(imSize))
         mask = normal[:, :, 3]
@@ -150,7 +151,7 @@ def load_a_prediction(root_dir, test_object, imSize, view_types, load_color=Fals
         all_normals_world.append(normal_world)
 
         if camera_type == 'ortho':
-            origins, dirs = get_ortho_ray_directions_origins(W=imSize[0], H=imSize[1])
+            origins, dirs = get_ortho_ray_directions_origins(W=imSize[0], H=imSize[1]) # get origins and direction from the image; But in camera coordinate yet.
         elif camera_type == 'pinhole':
             dirs = get_ray_directions(W=imSize[0], H=imSize[1],
                                                  fx=cam_params[0], fy=cam_params[1], cx=cam_params[2], cy=cam_params[3])
@@ -185,7 +186,7 @@ class OrthoDatasetBase():
         self.h = self.img_wh[1]
         self.camera_type = self.config.camera_type
         self.camera_params = self.config.camera_params  # [fx, fy, cx, cy]
-        
+
         self.view_types = ['front', 'front_right', 'right', 'back', 'left', 'front_left']
 
         self.view_weights = torch.from_numpy(np.array(self.config.view_weights)).float().to(self.rank).view(-1)
@@ -205,13 +206,13 @@ class OrthoDatasetBase():
         self.has_mask = True
         self.apply_mask = self.config.apply_mask
 
-        self.all_c2w = torch.from_numpy(self.pose_all_np)
-        self.all_images = torch.from_numpy(self.images_np) / 255.
-        self.all_fg_masks = torch.from_numpy(self.masks_np)
-        self.all_rgb_masks = torch.from_numpy(self.rgb_masks_np)
-        self.all_normals_world = torch.from_numpy(self.normals_world_np)
-        self.origins = torch.from_numpy(self.origins_np)
-        self.directions = torch.from_numpy(self.directions_np)
+        self.all_c2w = torch.from_numpy(self.pose_all_np)               # all camera poses of predicted view
+        self.all_images = torch.from_numpy(self.images_np) / 255.       # all images of predicted view
+        self.all_fg_masks = torch.from_numpy(self.masks_np)            # all masks of predicted view
+        self.all_rgb_masks = torch.from_numpy(self.rgb_masks_np)        # all masks of predicted view
+        self.all_normals_world = torch.from_numpy(self.normals_world_np) # all normals of predicted view
+        self.origins = torch.from_numpy(self.origins_np)                # all origins of rays
+        self.directions = torch.from_numpy(self.directions_np)          # all directions of rays
 
         self.directions = self.directions.float().to(self.rank)
         self.origins = self.origins.float().to(self.rank)

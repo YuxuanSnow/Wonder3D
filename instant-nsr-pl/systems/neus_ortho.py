@@ -44,7 +44,7 @@ class OrthoNeuSSystem(BaseSystem):
         self.cos = torch.nn.CosineSimilarity(dim=-1, eps=1e-6)
 
     def forward(self, batch):
-        return self.model(batch['rays'])
+        return self.model(batch['rays']) # forward the network
     
     def preprocess_data(self, batch, stage):
         if 'index' in batch: # validation / testing
@@ -68,7 +68,7 @@ class OrthoNeuSSystem(BaseSystem):
             elif self.dataset.directions.ndim == 4: # (N, H, W, 3)
                 directions = self.dataset.directions[index, y, x]
                 origins = self.dataset.origins[index, y, x]
-            rays_o, rays_d = get_ortho_rays(origins, directions, c2w)
+            rays_o, rays_d = get_ortho_rays(origins, directions, c2w) # get rays origin and direction, with direction already transformed
             rgb = self.dataset.all_images[index, y, x].view(-1, self.dataset.all_images.shape[-1]).to(self.rank)
             normal = self.dataset.all_normals_world[index, y, x].view(-1, self.dataset.all_normals_world.shape[-1]).to(self.rank)
             fg_mask = self.dataset.all_fg_masks[index, y, x].view(-1).to(self.rank)
@@ -108,17 +108,17 @@ class OrthoNeuSSystem(BaseSystem):
             rgb = rgb * fg_mask[...,None] + self.model.background_color * (1 - fg_mask[...,None])
         
         batch.update({
-            'rays': rays,
-            'rgb': rgb,
-            'normal': normal,
-            'fg_mask': fg_mask,
+            'rays': rays,             # each batch contains ray (origin and direction)
+            'rgb': rgb,               # rgb
+            'normal': normal,         # normal
+            'fg_mask': fg_mask,       # mask
             'rgb_mask': rgb_mask,
-            'cosines': cosines,
+            'cosines': cosines,       # cos similarity of ray direction and normal
             'view_weights': view_weights
         })      
     
     def training_step(self, batch, batch_idx):
-        out = self(batch)
+        out = self(batch) # using model to forward the batch in network. Network only uses the rays in the batch
 
         cosines = batch['cosines']
         fg_mask = batch['fg_mask']
@@ -139,7 +139,7 @@ class OrthoNeuSSystem(BaseSystem):
             train_num_rays = int(self.train_num_rays * (self.train_num_samples / out['num_samples_full'].sum().item()))        
             self.train_num_rays = min(int(self.train_num_rays * 0.9 + train_num_rays * 0.1), self.config.model.max_train_num_rays)
 
-        erros_rgb_mse = F.mse_loss(out['comp_rgb_full'][rgb_mask], batch['rgb'][rgb_mask], reduction='none')
+        erros_rgb_mse = F.mse_loss(out['comp_rgb_full'][rgb_mask], batch['rgb'][rgb_mask], reduction='none') # calculate rgb
         # erros_rgb_mse = erros_rgb_mse * torch.exp(grad_cosines.abs())[:, None][rgb_mask] / torch.exp(grad_cosines.abs()[rgb_mask]).sum()
         # loss_rgb_mse = ranking_loss(erros_rgb_mse.sum(dim=1), penalize_ratio=0.7, type='sum')
         loss_rgb_mse = ranking_loss(erros_rgb_mse.sum(dim=1), 

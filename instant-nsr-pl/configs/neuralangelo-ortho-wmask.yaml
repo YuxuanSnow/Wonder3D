@@ -4,9 +4,9 @@ seed: 42
 
 dataset:
   name: ortho
-  root_dir: /home/xiaoxiao/Workplace/wonder3Dplus/outputs/joint-twice/aigc/cropsize-224-cfg1.0
+  root_dir: /home/yuxuan/project/Wonder3D/outputs/2k2k_front/cropsize-192-cfg1.0
   cam_pose_dir: null
-  scene: scene_name
+  scene: _00003
   imSize: [1024, 1024]  # should use larger res, otherwise the exported mesh has wrong colors
   camera_type: ortho
   apply_mask: true
